@@ -11,6 +11,7 @@ defmodule WaGate.Application do
       WaGateWeb.Telemetry,
       WaGate.Repo,
       {DNSCluster, query: Application.get_env(:wa_gate, :dns_cluster_query) || :ignore},
+      {Oban, Application.fetch_env!(:wa_gate, Oban)},
       {Phoenix.PubSub, name: WaGate.PubSub},
       # Start a worker by calling: WaGate.Worker.start_link(arg)
       # {WaGate.Worker, arg},

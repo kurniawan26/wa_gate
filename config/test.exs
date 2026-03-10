@@ -1,4 +1,5 @@
 import Config
+config :wa_gate, Oban, testing: :manual
 
 # Configure your database
 #

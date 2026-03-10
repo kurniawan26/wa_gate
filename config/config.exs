@@ -7,6 +7,12 @@
 # General application configuration
 import Config
 
+config :wa_gate, Oban,
+  engine: Oban.Engines.Basic,
+  notifier: Oban.Notifiers.Postgres,
+  queues: [default: 10],
+  repo: WaGate.Repo
+
 config :wa_gate,
   ecto_repos: [WaGate.Repo],
   generators: [timestamp_type: :utc_datetime]
