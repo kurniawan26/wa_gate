@@ -36,6 +36,7 @@ config :wa_gate, WaGateWeb.Endpoint,
 # For production it's recommended to configure a different adapter
 # at the `config/runtime.exs`.
 config :wa_gate, WaGate.Mailer, adapter: Swoosh.Adapters.Local
+config :wa_gate, :whatsapp_engine, WaGate.WhatsApp.Adapters.Evolution
 
 # Configure esbuild (the version is required)
 config :esbuild,
