@@ -13,6 +13,11 @@ config :wa_gate, Oban,
   queues: [default: 10],
   repo: WaGate.Repo
 
+config :wa_gate, Oban,
+  repo: WaGate.Repo,
+  plugins: [Oban.Plugins.Pruner],
+  queues: [messaging: 10]
+
 config :wa_gate,
   ecto_repos: [WaGate.Repo],
   generators: [timestamp_type: :utc_datetime]
