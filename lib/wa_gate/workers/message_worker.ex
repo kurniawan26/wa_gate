@@ -34,8 +34,9 @@ defmodule WaGate.Workers.MessageWorker do
     case adapter.send_message(session, message.recipient_number, message.payload) do
       {:ok, _res} ->
         # Berhasil! Update status pesan dan pemakaian nomor
-        update_message_status(message, "sent", session.id)
+        {:ok, updated} = update_message_status(message, "sent", session.id)
         update_session_usage(session)
+        Phoenix.PubSub.broadcast(WaGate.PubSub, "messages:feed", {:message_sent, updated})
         :ok
 
       {:error, :unauthorized} ->

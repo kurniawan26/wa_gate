@@ -38,6 +38,7 @@ defmodule WaGateWeb.Router do
 
     live "/sessions", SessionLive.Index, :index
     live "/sessions/:id", SessionLive.Show, :show
+    live "/messages", MessageLive.Index, :index
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
