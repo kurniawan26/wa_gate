@@ -43,6 +43,9 @@ config :wa_gate, WaGateWeb.Endpoint,
 config :wa_gate, WaGate.Mailer, adapter: Swoosh.Adapters.Local
 config :wa_gate, :whatsapp_engine, WaGate.WhatsApp.Adapters.Evolution
 
+config :wa_gate, :whatsapp_engine_url, "http://localhost:8080"
+config :wa_gate, :whatsapp_engine_api_key, "lt67scX4Hbodj0kpaQYW8MPPIEoh94qpcvkU5COaiec="
+
 # Configure esbuild (the version is required)
 config :esbuild,
   version: "0.25.4",

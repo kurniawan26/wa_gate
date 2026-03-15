@@ -14,16 +14,21 @@ defmodule WaGateWeb.Router do
     plug :accepts, ["json"]
   end
 
+  scope "/api", WaGateWeb do
+    pipe_through :api
+
+    post "/webhooks/whatsapp", WebhookController, :receive
+    post "/messages", Api.MessageController, :create
+  end
+
   scope "/", WaGateWeb do
     pipe_through :browser
 
     get "/", PageController, :home
-  end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", WaGateWeb do
-  #   pipe_through :api
-  # end
+    live "/sessions", SessionLive.Index, :index
+    live "/sessions/:id", SessionLive.Show, :show
+  end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:wa_gate, :dev_routes) do

@@ -19,7 +19,7 @@ config :wa_gate, WaGate.Repo,
 config :wa_gate, WaGateWeb.Endpoint,
   # Binding to loopback ipv4 address prevents access from other machines.
   # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
-  http: [ip: {127, 0, 0, 1}],
+  http: [ip: {0, 0, 0, 0}],
   check_origin: false,
   code_reloader: true,
   debug_errors: true,
@@ -66,6 +66,12 @@ config :wa_gate, WaGateWeb.Endpoint,
       ~r"lib/wa_gate_web/(controllers|live|components)/.*\.(ex|heex)$"E
     ]
   ]
+
+# config/dev.exs
+config :wa_gate, :evolution_api,
+  base_url: "http://localhost:8080",
+  # Harus SAMA dengan di Docker
+  api_key: "lt67scX4Hbodj0kpaQYW8MPPIEoh94qpcvkU5COaiec="
 
 # Enable dev routes for dashboard and mailbox
 config :wa_gate, dev_routes: true
