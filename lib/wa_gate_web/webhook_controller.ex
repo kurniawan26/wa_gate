@@ -36,7 +36,7 @@ defmodule WaGateWeb.WebhookController do
   defp handle_inbound_message(phone, data) do
     with %{"key" => %{"remoteJid" => jid, "fromMe" => false, "id" => ext_id}} <- data,
          session when not is_nil(session) <- Accounts.get_session_by_phone(phone) do
-      sender_number = jid |> String.split("@") |> List.first()
+      sender_number = extract_sender_number(jid)
       body = get_in(data, ["message", "conversation"]) ||
              get_in(data, ["message", "extendedTextMessage", "text"])
 
@@ -51,6 +51,15 @@ defmodule WaGateWeb.WebhookController do
       })
     else
       _ -> :ok
+    end
+  end
+
+  # Nomor biasa: "6285887453948@s.whatsapp.net" → "6285887453948"
+  # LID format:  "207653246636271@lid"          → "207653246636271@lid" (simpan utuh)
+  defp extract_sender_number(jid) do
+    case String.split(jid, "@") do
+      [number, "s.whatsapp.net"] -> number
+      _ -> jid
     end
   end
 end
