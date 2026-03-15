@@ -10,13 +10,15 @@ import Config
 config :wa_gate, Oban,
   engine: Oban.Engines.Basic,
   notifier: Oban.Notifiers.Postgres,
-  queues: [default: 10],
-  repo: WaGate.Repo
-
-config :wa_gate, Oban,
   repo: WaGate.Repo,
-  plugins: [Oban.Plugins.Pruner],
-  queues: [messaging: 10]
+  queues: [messaging: 10],
+  plugins: [
+    Oban.Plugins.Pruner,
+    {Oban.Plugins.Cron,
+     crontab: [
+       {"0 0 * * *", WaGate.Workers.DailyResetWorker}
+     ]}
+  ]
 
 config :wa_gate,
   ecto_repos: [WaGate.Repo],
