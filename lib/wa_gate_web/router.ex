@@ -14,10 +14,20 @@ defmodule WaGateWeb.Router do
     plug :accepts, ["json"]
   end
 
+  pipeline :api_authenticated do
+    plug :accepts, ["json"]
+    plug WaGateWeb.Plugs.ApiAuth
+  end
+
   scope "/api", WaGateWeb do
     pipe_through :api
 
     post "/webhooks/whatsapp", WebhookController, :receive
+  end
+
+  scope "/api", WaGateWeb do
+    pipe_through :api_authenticated
+
     post "/messages", Api.MessageController, :create
   end
 

@@ -68,6 +68,8 @@ config :wa_gate, WaGateWeb.Endpoint,
   ]
 
 # config/dev.exs
+config :wa_gate, :api_key, "dev-secret-key"
+
 config :wa_gate, :evolution_api,
   base_url: "http://localhost:8080",
   # Harus SAMA dengan di Docker
