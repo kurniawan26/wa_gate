@@ -2,8 +2,12 @@ defmodule WaGateWeb.MessageLive.Thread do
   use WaGateWeb, :live_view
   alias WaGate.Messaging
 
+  on_mount {WaGateWeb.UserAuth, :require_auth}
+
   @impl true
   def mount(%{"number" => number}, _session, socket) do
+    user_id = socket.assigns.current_user.id
+
     if connected?(socket) do
       Phoenix.PubSub.subscribe(WaGate.PubSub, "messages:feed")
     end
@@ -11,7 +15,7 @@ defmodule WaGateWeb.MessageLive.Thread do
     {:ok,
      assign(socket,
        number: number,
-       messages: Messaging.list_thread(number),
+       messages: Messaging.list_thread(number, user_id),
        reply_text: ""
      )}
   end
@@ -33,11 +37,13 @@ defmodule WaGateWeb.MessageLive.Thread do
 
   @impl true
   def handle_info({:new_inbound, _message}, socket) do
-    {:noreply, assign(socket, messages: Messaging.list_thread(socket.assigns.number))}
+    user_id = socket.assigns.current_user.id
+    {:noreply, assign(socket, messages: Messaging.list_thread(socket.assigns.number, user_id))}
   end
 
   def handle_info({:message_sent, _message}, socket) do
-    {:noreply, assign(socket, messages: Messaging.list_thread(socket.assigns.number))}
+    user_id = socket.assigns.current_user.id
+    {:noreply, assign(socket, messages: Messaging.list_thread(socket.assigns.number, user_id))}
   end
 
   defp contact_name(messages, fallback) do

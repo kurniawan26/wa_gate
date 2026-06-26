@@ -2,6 +2,7 @@ defmodule WaGateWeb.WebhookController do
   use WaGateWeb, :controller
   alias WaGate.Accounts
   alias WaGate.Messaging
+  alias WaGate.Crypto
 
   def receive(conn, params) do
     case params do
@@ -40,11 +41,13 @@ defmodule WaGateWeb.WebhookController do
       body = get_in(data, ["message", "conversation"]) ||
              get_in(data, ["message", "extendedTextMessage", "text"])
 
+      encrypted_body = if body, do: Crypto.encrypt(body, Crypto.app_key()), else: nil
+
       Messaging.save_inbound_message(%{
         external_id: ext_id,
         sender_number: sender_number,
         sender_name: data["pushName"],
-        body: body,
+        body: encrypted_body,
         message_type: data["messageType"] || "unknown",
         raw_payload: data,
         whatsapp_session_id: session.id

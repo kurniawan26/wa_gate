@@ -2,8 +2,12 @@ defmodule WaGateWeb.MessageLive.Index do
   use WaGateWeb, :live_view
   alias WaGate.Messaging
 
+  on_mount {WaGateWeb.UserAuth, :require_auth}
+
   @impl true
   def mount(_params, _session, socket) do
+    user_id = socket.assigns.current_user.id
+
     if connected?(socket) do
       Phoenix.PubSub.subscribe(WaGate.PubSub, "messages:feed")
     end
@@ -11,7 +15,7 @@ defmodule WaGateWeb.MessageLive.Index do
     socket =
       socket
       |> assign(
-        contacts: Messaging.list_contacts(),
+        contacts: Messaging.list_contacts(user_id),
         show_compose: false,
         compose_mode: :single,
         compose_to: "",
@@ -76,11 +80,13 @@ defmodule WaGateWeb.MessageLive.Index do
 
   @impl true
   def handle_info({:new_inbound, _message}, socket) do
-    {:noreply, assign(socket, contacts: Messaging.list_contacts())}
+    user_id = socket.assigns.current_user.id
+    {:noreply, assign(socket, contacts: Messaging.list_contacts(user_id))}
   end
 
   def handle_info({:message_sent, _message}, socket) do
-    {:noreply, assign(socket, contacts: Messaging.list_contacts())}
+    user_id = socket.assigns.current_user.id
+    {:noreply, assign(socket, contacts: Messaging.list_contacts(user_id))}
   end
 
   defp maybe_consume_csv(socket) do

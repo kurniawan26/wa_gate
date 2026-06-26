@@ -2,11 +2,14 @@ defmodule WaGateWeb.SessionLive.Show do
   use WaGateWeb, :live_view
   alias WaGate.Accounts
 
+  on_mount {WaGateWeb.UserAuth, :require_auth}
+
   @qr_refresh_interval 30_000
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
-    session = Accounts.get_session!(id)
+    user_id = socket.assigns.current_user.id
+    session = Accounts.get_user_session!(id, user_id)
 
     if connected?(socket) do
       Phoenix.PubSub.subscribe(WaGate.PubSub, "session:#{session.id}")
@@ -71,5 +74,4 @@ defmodule WaGateWeb.SessionLive.Show do
       Process.send_after(self(), :refresh_qr, @qr_refresh_interval)
     end
   end
-
 end

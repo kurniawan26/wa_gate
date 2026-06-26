@@ -3,9 +3,12 @@ defmodule WaGateWeb.SessionLive.Index do
   alias WaGate.Accounts
   alias WaGate.Accounts.Session
 
+  on_mount {WaGateWeb.UserAuth, :require_auth}
+
   @impl true
   def mount(_params, _session, socket) do
-    sessions = Accounts.list_sessions()
+    user_id = socket.assigns.current_user.id
+    sessions = Accounts.list_sessions(user_id)
     {:ok, assign(socket, sessions: sessions, show_form: false, form: nil)}
   end
 
@@ -25,7 +28,9 @@ defmodule WaGateWeb.SessionLive.Index do
   end
 
   def handle_event("create", %{"session" => params}, socket) do
-    case Accounts.create_session_with_instance(params) do
+    user_id = socket.assigns.current_user.id
+
+    case Accounts.create_session_with_instance(params, user_id) do
       {:ok, session} ->
         {:noreply, push_navigate(socket, to: ~p"/sessions/#{session.id}")}
 

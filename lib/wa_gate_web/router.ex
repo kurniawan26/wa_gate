@@ -1,6 +1,8 @@
 defmodule WaGateWeb.Router do
   use WaGateWeb, :router
 
+  import WaGateWeb.UserAuth, only: [fetch_current_user: 2, require_authenticated_user: 2]
+
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -8,6 +10,7 @@ defmodule WaGateWeb.Router do
     plug :put_root_layout, html: {WaGateWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug :fetch_current_user
   end
 
   pipeline :api do
@@ -17,6 +20,10 @@ defmodule WaGateWeb.Router do
   pipeline :api_authenticated do
     plug :accepts, ["json"]
     plug WaGateWeb.Plugs.ApiAuth
+  end
+
+  pipeline :require_auth do
+    plug :require_authenticated_user
   end
 
   scope "/api", WaGateWeb do
@@ -31,24 +38,34 @@ defmodule WaGateWeb.Router do
     post "/messages", Api.MessageController, :create
   end
 
+  # Routes publik (tanpa auth)
   scope "/", WaGateWeb do
     pipe_through :browser
 
+    get "/login", AuthController, :login
+    post "/login", AuthController, :create
+    delete "/logout", AuthController, :delete
+    get "/register", AuthController, :register
+    post "/register", AuthController, :create_user
+  end
+
+  # Routes yang butuh login
+  scope "/", WaGateWeb do
+    pipe_through [:browser, :require_auth]
+
     get "/", PageController, :home
 
-    live "/sessions", SessionLive.Index, :index
-    live "/sessions/:id", SessionLive.Show, :show
-    live "/messages", MessageLive.Index, :index
-    live "/messages/:number", MessageLive.Thread, :show
+    live_session :authenticated,
+      on_mount: [{WaGateWeb.UserAuth, :require_auth}] do
+      live "/sessions", SessionLive.Index, :index
+      live "/sessions/:id", SessionLive.Show, :show
+      live "/messages", MessageLive.Index, :index
+      live "/messages/:number", MessageLive.Thread, :show
+    end
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:wa_gate, :dev_routes) do
-    # If you want to use the LiveDashboard in production, you should put
-    # it behind authentication and allow only admins to access it.
-    # If your application does not have an admins-only section yet,
-    # you can use Plug.BasicAuth to set up some basic authentication
-    # as long as you are also using SSL (which you should anyway).
     import Phoenix.LiveDashboard.Router
 
     scope "/dev" do
