@@ -6,15 +6,16 @@ defmodule WaGate.Workers.MessageWorker do
   alias WaGate.Accounts
 
   @impl Oban.Worker
-  def perform(%Oban.Job{args: %{"message_id" => message_id}}) do
+  def perform(%Oban.Job{args: %{"message_id" => message_id, "plaintext" => plaintext}}) do
     message = Repo.get!(Message, message_id)
+    message_with_plaintext = %{message | payload: plaintext}
 
     case Dispatcher.get_available_session() do
       nil ->
         {:error, "No active WhatsApp sessions available"}
 
       session ->
-        send_via_adapter(session, message)
+        send_via_adapter(session, message_with_plaintext)
     end
   end
 

@@ -14,6 +14,7 @@ defmodule WaGate.Accounts.Session do
     field :messages_sent_today, :integer, default: 0
     field :last_used_at, :naive_datetime
 
+    belongs_to :user, WaGate.Auth.User
     has_many :outbound_messages, WaGate.Messaging.Message, foreign_key: :whatsapp_session_id
 
     timestamps()
@@ -29,7 +30,8 @@ defmodule WaGate.Accounts.Session do
       :auth_data,
       :max_daily_messages,
       :messages_sent_today,
-      :last_used_at
+      :last_used_at,
+      :user_id
     ])
     |> validate_required([:phone_number, :status])
     |> unique_constraint(:phone_number)
