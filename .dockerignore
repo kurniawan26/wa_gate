@@ -1,0 +1,13 @@
+_build/
+deps/
+cover/
+doc/
+tmp/
+.git/
+.gitignore
+priv/static/assets/
+priv/static/cache_manifest.json
+assets/node_modules/
+*.ez
+erl_crash.dump
+wa_gate-*.tar
