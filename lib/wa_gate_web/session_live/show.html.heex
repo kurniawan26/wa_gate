@@ -1,0 +1,35 @@
+<div class="p-6">
+  <.link navigate={~p"/sessions"} class="text-sm text-gray-500">← Kembali</.link>
+  <h1 class="text-3xl font-bold mt-2">{@session.name}</h1>
+  <p class="text-gray-500 text-sm">{@session.phone_number}</p>
+
+  <div class="mt-8 flex flex-col items-center border p-10 bg-gray-50 rounded-xl">
+    <%= if @session.status == "connected" do %>
+      <div class="text-center">
+        <div class="text-green-500 text-5xl mb-4">✅</div>
+        <p class="text-xl font-medium">Nomor Sudah Terhubung</p>
+        <p class="text-sm text-gray-500 mt-2">
+          Pesan terkirim hari ini: {@session.messages_sent_today} / {@session.max_daily_messages}
+        </p>
+      </div>
+    <% else %>
+      <p class="mb-4 text-gray-600">Silakan scan QR Code dengan aplikasi WhatsApp Anda:</p>
+      <%= if @qr_code do %>
+        <img src={"data:image/png;base64,#{@qr_code}"} class="border-4 border-white shadow-lg" />
+      <% else %>
+        <div class="animate-pulse bg-gray-200 w-64 h-64 flex items-center justify-center text-gray-400">
+          Memuat QR Code...
+        </div>
+      <% end %>
+      <div class="flex gap-3 mt-6">
+        <button phx-click="refresh_qr" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+          Refresh QR
+        </button>
+        <button phx-click="sync_status" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
+          Cek Status
+        </button>
+      </div>
+      <p class="text-xs text-gray-400 mt-3">QR otomatis diperbarui tiap 30 detik</p>
+    <% end %>
+  </div>
+</div>
