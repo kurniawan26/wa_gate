@@ -67,6 +67,7 @@ defmodule WaGate.MixProject do
       {:dns_cluster, "~> 0.2.0"},
       {:bandit, "~> 1.5"},
       {:oban, "~> 2.17"},
+      {:bcrypt_elixir, "~> 3.0"},
       {:igniter, "~> 0.6", optional: true}
     ]
   end
