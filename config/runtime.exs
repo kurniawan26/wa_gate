@@ -24,6 +24,15 @@ config :wa_gate, WaGateWeb.Endpoint,
   http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
 if config_env() == :prod do
+  encryption_key =
+    System.get_env("ENCRYPTION_KEY") ||
+      raise """
+      environment variable ENCRYPTION_KEY is missing.
+      Generate one with: openssl rand -base64 32
+      """
+
+  config :wa_gate, :encryption_key, encryption_key
+
   database_url =
     System.get_env("DATABASE_URL") ||
       raise """
