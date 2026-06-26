@@ -34,11 +34,11 @@ RUN mix assets.deploy
 COPY config/runtime.exs config/
 RUN mix release
 
-# Stage 2: Runner
-FROM debian:bookworm-slim AS runner
+# Stage 2: Runner — pakai base image yang sama dengan builder agar OpenSSL & GLIBC selalu cocok
+FROM elixir:1.18-slim AS runner
 
 RUN apt-get update -y && \
-    apt-get install -y libstdc++6 openssl libncurses5 locales ca-certificates && \
+    apt-get install -y locales ca-certificates && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
@@ -57,4 +57,4 @@ COPY --from=builder --chown=app:app /app/_build/prod/rel/wa_gate ./
 
 EXPOSE 4000
 
-CMD ["bin/wa_gate", "start"]
+CMD ["sh", "-c", "bin/wa_gate eval 'WaGate.Release.migrate()' && bin/wa_gate start"]

@@ -63,11 +63,22 @@ if config_env() == :prod do
       """
 
   host = System.get_env("PHX_HOST") || "example.com"
+  scheme = System.get_env("PHX_SCHEME", "http")
+  port = String.to_integer(System.get_env("PORT", "4000"))
 
   config :wa_gate, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
 
+  config :wa_gate, :whatsapp_engine_url,
+    System.get_env("EVOLUTION_API_URL", "http://localhost:8080")
+
+  config :wa_gate, :whatsapp_engine_api_key,
+    System.get_env("EVOLUTION_API_KEY") ||
+      raise """
+      environment variable EVOLUTION_API_KEY is missing.
+      """
+
   config :wa_gate, WaGateWeb.Endpoint,
-    url: [host: host, port: 443, scheme: "https"],
+    url: [host: host, port: port, scheme: scheme],
     http: [
       # Enable IPv6 and bind on all interfaces.
       # Set it to  {0, 0, 0, 0, 0, 0, 0, 1} for local network only access.

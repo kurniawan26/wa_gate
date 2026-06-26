@@ -10,18 +10,8 @@ if [ -z "$VERSION" ]; then
   exit 1
 fi
 
-# Login dulu agar bisa baca username aktif
-echo "[1/3] Login ke Docker Hub..."
-docker login
-
 # Ambil username dari Docker Hub config (hasil login)
-DOCKER_HUB_USER=$(cat ~/.docker/config.json 2>/dev/null | grep -oP '(?<="https://index.docker.io/v1/": \{"auth": ")[^"]+' | base64 -d 2>/dev/null | cut -d: -f1)
-
-# Fallback: minta input manual jika tidak bisa deteksi
-if [ -z "$DOCKER_HUB_USER" ]; then
-  read -rp "Masukkan Docker Hub username kamu [kurniawan026]: " DOCKER_HUB_USER
-  DOCKER_HUB_USER="${DOCKER_HUB_USER:-kurniawan026}"
-fi
+DOCKER_HUB_USER=kurniawan026
 
 FULL_IMAGE="${DOCKER_HUB_USER}/${IMAGE_NAME}"
 
