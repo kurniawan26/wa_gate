@@ -47,10 +47,18 @@
         <div class="mt-3 text-sm text-gray-600">
           Pesan Hari Ini: {session.messages_sent_today} / {session.max_daily_messages}
         </div>
-        <div class="mt-4">
+        <div class="mt-4 flex items-center gap-3">
           <.link navigate={~p"/sessions/#{session.id}"} class="text-blue-500 hover:underline text-sm">
             Manage & Scan QR →
           </.link>
+          <%= if session.status == "connected" do %>
+            <.link
+              navigate={~p"/messages"}
+              class="text-sm bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition"
+            >
+              Lihat Pesan →
+            </.link>
+          <% end %>
         </div>
       </div>
     <% end %>
