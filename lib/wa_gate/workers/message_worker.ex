@@ -7,13 +7,10 @@ defmodule WaGate.Workers.MessageWorker do
 
   @impl Oban.Worker
   def perform(%Oban.Job{args: %{"message_id" => message_id}}) do
-    # 1. Ambil data pesan dari DB
     message = Repo.get!(Message, message_id)
 
-    # 2. Cari nomor WA yang tersedia melalui Dispatcher
     case Dispatcher.get_available_session() do
       nil ->
-        # Jika tidak ada nomor siap, kita "fail" agar Oban coba lagi nanti
         {:error, "No active WhatsApp sessions available"}
 
       session ->
@@ -22,25 +19,21 @@ defmodule WaGate.Workers.MessageWorker do
   end
 
   defp send_via_adapter(session, message) do
-    # Ambil adapter dari config (Evolution API)
     adapter = Application.get_env(:wa_gate, :whatsapp_engine)
 
-    # 3. Simulasi Mengetik (Typing...) untuk keamanan
     adapter.update_presence(session, message.recipient_number, :composing)
-    # Jeda 2 detik seolah sedang mengetik
-    Process.sleep(2000)
+    base_delay = message.payload |> String.length() |> Kernel.*(50) |> max(1000) |> min(5000)
+    jitter = :rand.uniform(1000) - 500
+    Process.sleep(base_delay + jitter)
 
-    # 4. Eksekusi Kirim Pesan
     case adapter.send_message(session, message.recipient_number, message.payload) do
       {:ok, _res} ->
-        # Berhasil! Update status pesan dan pemakaian nomor
         {:ok, updated} = update_message_status(message, "sent", session.id)
         update_session_usage(session)
         Phoenix.PubSub.broadcast(WaGate.PubSub, "messages:feed", {:message_sent, updated})
         :ok
 
       {:error, :unauthorized} ->
-        # Nomor logout/banned saat pengiriman
         mark_session_disconnected(session)
         {:error, "Session disconnected during sending"}
 
@@ -49,7 +42,6 @@ defmodule WaGate.Workers.MessageWorker do
     end
   end
 
-  # Helper functions untuk update database
   defp update_message_status(msg, status, session_id) do
     msg |> Message.changeset(%{status: status, whatsapp_session_id: session_id}) |> Repo.update()
   end

@@ -43,7 +43,6 @@ defmodule WaGateWeb.MessageLive.Index do
     {:noreply, assign(socket, show_compose: false)}
   end
 
-  # Single mode
   def handle_event("update_compose_fields", params, socket) do
     {:noreply,
      assign(socket,
@@ -52,7 +51,6 @@ defmodule WaGateWeb.MessageLive.Index do
      )}
   end
 
-  # Dipanggil saat file dipilih atau template berubah (satu form)
   def handle_event("update_bulk_fields", params, socket) do
     template = Map.get(params, "template", socket.assigns.bulk_template)
     socket = socket |> maybe_consume_csv() |> assign(bulk_template: template)
@@ -85,8 +83,6 @@ defmodule WaGateWeb.MessageLive.Index do
     {:noreply, assign(socket, contacts: Messaging.list_contacts())}
   end
 
-  # ── Upload helpers ───────────────────────────────────────────────────────────
-
   defp maybe_consume_csv(socket) do
     case socket.assigns.uploads.csv_file.entries do
       [%{done?: true}] ->
@@ -102,8 +98,6 @@ defmodule WaGateWeb.MessageLive.Index do
         socket
     end
   end
-
-  # ── CSV helpers ─────────────────────────────────────────────────────────────
 
   defp build_preview(csv, template) do
     if String.trim(csv) == "" or String.trim(template) == "" do
@@ -148,8 +142,6 @@ defmodule WaGateWeb.MessageLive.Index do
       String.replace(acc, "{{#{key}}}", value)
     end)
   end
-
-  # ── Render ───────────────────────────────────────────────────────────────────
 
   @impl true
   def render(assigns) do

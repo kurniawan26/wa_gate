@@ -7,7 +7,6 @@ defmodule WaGateWeb.Api.MessageController do
   Contoh JSON: {"to": "62812345678", "text": "Halo dari Sistem CRM!"}
   """
   def create(conn, %{"to" => to, "text" => text}) do
-    # Memasukkan ke antrean Messaging yang sudah terhubung ke Oban
     case Messaging.enqueue_message(to, text) do
       {:ok, message} ->
         conn
