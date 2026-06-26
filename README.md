@@ -69,6 +69,41 @@ iex -S mix phx.server
 | `/messages/:number` | Thread percakapan dengan satu nomor |
 | `/dev/dashboard` | Phoenix LiveDashboard (dev only) |
 
+## Kirim Pesan Massal (CSV)
+
+Fitur kirim massal tersedia di halaman `/messages` via tombol **"+ Kirim Massal"**.
+
+### Format File CSV
+
+Kolom wajib: `number`. Kolom lain bebas dan bisa digunakan sebagai variabel template.
+
+```csv
+number,name,produk
+628111111111,Budi Santoso,Paket Pro
+628222222222,Siti Rahayu,Paket Starter
+628333333333,Ahmad Fauzi,Paket Enterprise
+```
+
+> File contoh tersedia di `priv/static/contoh_penerima.csv`
+
+### Template Pesan
+
+Gunakan `{{nama_kolom}}` untuk menyisipkan nilai dari kolom CSV:
+
+```
+Halo {{name}},
+
+Terima kasih sudah berlangganan {{produk}} kami!
+Nomor terdaftar: {{number}}
+
+Salam,
+Tim Support
+```
+
+Setiap baris CSV akan menghasilkan satu pesan dengan variabel yang sudah diisi. Preview otomatis muncul sebelum pengiriman.
+
+---
+
 ## REST API
 
 ### Kirim Pesan
