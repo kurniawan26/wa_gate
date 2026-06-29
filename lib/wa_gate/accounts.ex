@@ -21,6 +21,14 @@ defmodule WaGate.Accounts do
     Repo.get_by!(Session, id: id, user_id: user_id)
   end
 
+  def get_user_session(id, user_id) do
+    Repo.get_by(Session, id: id, user_id: user_id)
+  end
+
+  def get_user_session_by_phone(phone_number, user_id) do
+    Repo.get_by(Session, phone_number: phone_number, user_id: user_id)
+  end
+
   def get_session_by_phone(phone_number) do
     Repo.get_by(Session, phone_number: phone_number)
   end

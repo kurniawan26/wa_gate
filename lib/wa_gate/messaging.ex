@@ -7,7 +7,9 @@ defmodule WaGate.Messaging do
   alias WaGate.Workers.MessageWorker
   alias WaGate.Crypto
 
-  def enqueue_message(recipient, text, user_id) do
+  def enqueue_message(recipient, text, user_id, opts \\ []) do
+    session_id = Keyword.get(opts, :session_id)
+
     Repo.transaction(fn ->
       encrypted_payload = Crypto.encrypt(text, Crypto.app_key())
 
@@ -21,7 +23,7 @@ defmodule WaGate.Messaging do
         })
         |> Repo.insert()
 
-      %{message_id: message.id, plaintext: text, user_id: user_id}
+      %{message_id: message.id, plaintext: text, user_id: user_id, session_id: session_id}
       |> MessageWorker.new()
       |> Oban.insert!()
 
@@ -45,9 +47,9 @@ defmodule WaGate.Messaging do
     end
   end
 
-  def list_recent_messages(user_id, limit \\ 50) do
+  def list_recent_messages(user_id, limit \\ 50, session_id \\ nil) do
     key = Crypto.app_key()
-    session_ids = user_session_ids(user_id)
+    session_ids = resolve_session_ids(user_id, session_id)
 
     inbound =
       Repo.all(
@@ -74,9 +76,9 @@ defmodule WaGate.Messaging do
     |> Enum.take(limit)
   end
 
-  def list_contacts(user_id) do
+  def list_contacts(user_id, session_id \\ nil) do
     key = Crypto.app_key()
-    session_ids = user_session_ids(user_id)
+    session_ids = resolve_session_ids(user_id, session_id)
 
     inbound =
       Repo.all(from m in InboundMessage,
@@ -119,7 +121,8 @@ defmodule WaGate.Messaging do
       Repo.all(
         from m in InboundMessage,
           where: m.sender_number == ^number and m.whatsapp_session_id in ^session_ids,
-          order_by: [asc: m.inserted_at]
+          order_by: [asc: m.inserted_at],
+          preload: [:whatsapp_session]
       )
       |> Enum.map(&(&1 |> Map.put(:kind, :inbound) |> decrypt_inbound(key)))
 
@@ -127,7 +130,8 @@ defmodule WaGate.Messaging do
       Repo.all(
         from m in Message,
           where: m.recipient_number == ^number and m.whatsapp_session_id in ^session_ids,
-          order_by: [asc: m.inserted_at]
+          order_by: [asc: m.inserted_at],
+          preload: [:whatsapp_session]
       )
       |> Enum.map(&(&1 |> Map.put(:kind, :outbound) |> decrypt_outbound(key)))
 
@@ -140,6 +144,9 @@ defmodule WaGate.Messaging do
   defp user_session_ids(user_id) do
     Repo.all(from s in Session, where: s.user_id == ^user_id, select: s.id)
   end
+
+  defp resolve_session_ids(_user_id, session_id) when is_binary(session_id), do: [session_id]
+  defp resolve_session_ids(user_id, _), do: user_session_ids(user_id)
 
   defp decrypt_inbound(%{body: body} = msg, key) do
     %{msg | body: safe_decrypt(body, key)}

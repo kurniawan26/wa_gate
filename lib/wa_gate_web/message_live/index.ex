@@ -1,6 +1,7 @@
 defmodule WaGateWeb.MessageLive.Index do
   use WaGateWeb, :live_view
   alias WaGate.Messaging
+  alias WaGate.Accounts
 
   on_mount {WaGateWeb.UserAuth, :require_auth}
 
@@ -12,9 +13,13 @@ defmodule WaGateWeb.MessageLive.Index do
       Phoenix.PubSub.subscribe(WaGate.PubSub, "messages:feed")
     end
 
+    sessions = Accounts.list_sessions(user_id)
+
     socket =
       socket
       |> assign(
+        sessions: sessions,
+        selected_session_id: nil,
         contacts: Messaging.list_contacts(user_id),
         show_compose: false,
         compose_mode: :single,
@@ -27,6 +32,24 @@ defmodule WaGateWeb.MessageLive.Index do
       |> allow_upload(:csv_file, accept: ~w(.csv text/csv), max_entries: 1, auto_upload: true)
 
     {:ok, socket}
+  end
+
+  @impl true
+  def handle_params(params, _uri, socket) do
+    user_id = socket.assigns.current_user.id
+    sessions = socket.assigns.sessions
+
+    selected_session_id =
+      case Map.get(params, "session_id") do
+        nil ->
+          nil
+
+        sid ->
+          if Enum.any?(sessions, &(&1.id == sid)), do: sid, else: nil
+      end
+
+    contacts = Messaging.list_contacts(user_id, selected_session_id)
+    {:noreply, assign(socket, selected_session_id: selected_session_id, contacts: contacts)}
   end
 
   @impl true
@@ -80,15 +103,25 @@ defmodule WaGateWeb.MessageLive.Index do
     {:noreply, assign(socket, show_compose: false)}
   end
 
+  def handle_event("filter_session", %{"session_id" => sid}, socket) do
+    if sid == "" do
+      {:noreply, push_patch(socket, to: ~p"/messages")}
+    else
+      {:noreply, push_patch(socket, to: ~p"/messages?session_id=#{sid}")}
+    end
+  end
+
   @impl true
   def handle_info({:new_inbound, _message}, socket) do
     user_id = socket.assigns.current_user.id
-    {:noreply, assign(socket, contacts: Messaging.list_contacts(user_id))}
+    session_id = socket.assigns.selected_session_id
+    {:noreply, assign(socket, contacts: Messaging.list_contacts(user_id, session_id))}
   end
 
   def handle_info({:message_sent, _message}, socket) do
     user_id = socket.assigns.current_user.id
-    {:noreply, assign(socket, contacts: Messaging.list_contacts(user_id))}
+    session_id = socket.assigns.selected_session_id
+    {:noreply, assign(socket, contacts: Messaging.list_contacts(user_id, session_id))}
   end
 
   defp maybe_consume_csv(socket) do

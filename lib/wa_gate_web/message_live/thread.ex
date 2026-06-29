@@ -12,11 +12,15 @@ defmodule WaGateWeb.MessageLive.Thread do
       Phoenix.PubSub.subscribe(WaGate.PubSub, "messages:feed")
     end
 
+    messages = Messaging.list_thread(number, user_id)
+    preferred_session_id = find_preferred_session_id(messages)
+
     {:ok,
      assign(socket,
        number: number,
-       messages: Messaging.list_thread(number, user_id),
-       reply_text: ""
+       messages: messages,
+       reply_text: "",
+       preferred_session_id: preferred_session_id
      )}
   end
 
@@ -30,7 +34,8 @@ defmodule WaGateWeb.MessageLive.Thread do
 
     if trimmed != "" do
       user_id = socket.assigns.current_user.id
-      Messaging.enqueue_message(socket.assigns.number, trimmed, user_id)
+      session_id = socket.assigns.preferred_session_id
+      Messaging.enqueue_message(socket.assigns.number, trimmed, user_id, session_id: session_id)
     end
 
     {:noreply, assign(socket, reply_text: "")}
@@ -45,6 +50,13 @@ defmodule WaGateWeb.MessageLive.Thread do
   def handle_info({:message_sent, _message}, socket) do
     user_id = socket.assigns.current_user.id
     {:noreply, assign(socket, messages: Messaging.list_thread(socket.assigns.number, user_id))}
+  end
+
+  defp find_preferred_session_id(messages) do
+    case Enum.find(messages, &(&1.kind == :inbound)) do
+      %{whatsapp_session_id: sid} when is_binary(sid) -> sid
+      _ -> nil
+    end
   end
 
   defp contact_name(messages, fallback) do

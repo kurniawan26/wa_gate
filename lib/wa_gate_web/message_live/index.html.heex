@@ -190,6 +190,30 @@
     </div>
   <% end %>
 
+  <%!-- Session Filter --%>
+  <%= if length(@sessions) > 1 do %>
+    <div class="flex items-center gap-2 px-6 py-2 border-b border-gray-100 bg-gray-50">
+      <label class="text-xs text-gray-500 shrink-0">Filter sesi:</label>
+      <select
+        phx-change="filter_session"
+        name="session_id"
+        class="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white focus:outline-none focus:border-gray-400 transition"
+      >
+        <option value="">Semua Sesi</option>
+        <%= for session <- @sessions do %>
+          <option value={session.id} selected={@selected_session_id == session.id}>
+            {session.name || session.phone_number}
+          </option>
+        <% end %>
+      </select>
+      <%= if @selected_session_id do %>
+        <span class="text-xs text-gray-400 ml-auto">
+          {length(@contacts)} kontak
+        </span>
+      <% end %>
+    </div>
+  <% end %>
+
   <%!-- Contact List --%>
   <div class="divide-y divide-gray-100 bg-white">
     <%= if @contacts == [] do %>

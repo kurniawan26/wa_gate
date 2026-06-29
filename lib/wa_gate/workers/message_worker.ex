@@ -6,16 +6,36 @@ defmodule WaGate.Workers.MessageWorker do
   alias WaGate.Accounts
 
   @impl Oban.Worker
-  def perform(%Oban.Job{args: %{"message_id" => message_id, "plaintext" => plaintext, "user_id" => user_id}}) do
+  def perform(%Oban.Job{args: %{"message_id" => message_id, "plaintext" => plaintext, "user_id" => user_id} = args}) do
     message = Repo.get!(Message, message_id)
     message_with_plaintext = %{message | payload: plaintext}
+    session_id = Map.get(args, "session_id")
 
+    case resolve_session(session_id, user_id) do
+      {:ok, session} -> send_via_adapter(session, message_with_plaintext)
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  defp resolve_session(nil, user_id) do
     case Dispatcher.get_available_session(user_id) do
-      nil ->
-        {:error, "No active WhatsApp sessions available for this user"}
+      nil -> {:error, "No active WhatsApp sessions available for this user"}
+      session -> {:ok, session}
+    end
+  end
 
-      session ->
-        send_via_adapter(session, message_with_plaintext)
+  defp resolve_session(session_id, _user_id) do
+    session = Accounts.get_session!(session_id)
+
+    cond do
+      session.status != "connected" ->
+        {:error, "Session #{session_id} is not connected"}
+
+      session.messages_sent_today >= session.max_daily_messages ->
+        {:error, "Session #{session_id} has reached daily limit"}
+
+      true ->
+        {:ok, session}
     end
   end
 
