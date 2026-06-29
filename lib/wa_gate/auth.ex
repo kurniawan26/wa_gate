@@ -8,6 +8,10 @@ defmodule WaGate.Auth do
     Repo.get_by(User, email: String.downcase(email))
   end
 
+  def get_user_by_api_key(api_key) when is_binary(api_key) do
+    Repo.get_by(User, api_key: api_key)
+  end
+
   def register(attrs) do
     %User{}
     |> User.registration_changeset(attrs)

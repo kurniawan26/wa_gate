@@ -29,7 +29,8 @@ defmodule WaGateWeb.MessageLive.Thread do
     trimmed = String.trim(text)
 
     if trimmed != "" do
-      Messaging.enqueue_message(socket.assigns.number, trimmed)
+      user_id = socket.assigns.current_user.id
+      Messaging.enqueue_message(socket.assigns.number, trimmed, user_id)
     end
 
     {:noreply, assign(socket, reply_text: "")}

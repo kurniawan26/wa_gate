@@ -11,6 +11,7 @@ defmodule WaGate.Auth.User do
     field :password, :string, virtual: true
     field :password_hash, :string
     field :enc_salt, :string
+    field :api_key, :string
 
     has_many :whatsapp_sessions, WaGate.Accounts.Session, foreign_key: :user_id
 
@@ -27,7 +28,15 @@ defmodule WaGate.Auth.User do
     |> unique_constraint(:email, message: "email sudah terdaftar")
     |> put_enc_salt()
     |> hash_password()
+    |> generate_api_key()
   end
+
+  defp generate_api_key(%{valid?: true} = changeset) do
+    key = :crypto.strong_rand_bytes(32) |> Base.encode16(case: :lower)
+    put_change(changeset, :api_key, key)
+  end
+
+  defp generate_api_key(changeset), do: changeset
 
   defp put_enc_salt(%{valid?: true} = changeset) do
     salt = :crypto.strong_rand_bytes(16) |> Base.encode64()

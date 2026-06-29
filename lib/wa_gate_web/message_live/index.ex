@@ -63,15 +63,17 @@ defmodule WaGateWeb.MessageLive.Index do
   end
 
   def handle_event("send_compose", _params, socket) do
+    user_id = socket.assigns.current_user.id
+
     case socket.assigns.compose_mode do
       :single ->
         text = String.trim(socket.assigns.compose_text)
         to = String.trim(socket.assigns.compose_to)
-        if text != "" and to != "", do: Messaging.enqueue_message(to, text)
+        if text != "" and to != "", do: Messaging.enqueue_message(to, text, user_id)
 
       :bulk ->
         Enum.each(socket.assigns.bulk_preview, fn %{number: number, message: message} ->
-          Messaging.enqueue_message(number, message)
+          Messaging.enqueue_message(number, message, user_id)
         end)
     end
 

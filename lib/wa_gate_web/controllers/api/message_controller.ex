@@ -7,7 +7,9 @@ defmodule WaGateWeb.Api.MessageController do
   Contoh JSON: {"to": "62812345678", "text": "Halo dari Sistem CRM!"}
   """
   def create(conn, %{"to" => to, "text" => text}) do
-    case Messaging.enqueue_message(to, text) do
+    user_id = conn.assigns.current_user.id
+
+    case Messaging.enqueue_message(to, text, user_id) do
       {:ok, message} ->
         conn
         |> put_status(:accepted)

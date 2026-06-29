@@ -13,6 +13,7 @@ defmodule WaGate.Messaging.Message do
     field :retry_count, :integer, default: 0
 
     belongs_to :whatsapp_session, WaGate.Accounts.Session
+    belongs_to :user, WaGate.Auth.User
 
     timestamps()
   end
@@ -25,6 +26,7 @@ defmodule WaGate.Messaging.Message do
       :payload,
       :status,
       :whatsapp_session_id,
+      :user_id,
       :error_reason,
       :retry_count
     ])

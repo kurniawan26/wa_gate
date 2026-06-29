@@ -7,16 +7,21 @@ defmodule WaGate.Messaging do
   alias WaGate.Workers.MessageWorker
   alias WaGate.Crypto
 
-  def enqueue_message(recipient, text) do
+  def enqueue_message(recipient, text, user_id) do
     Repo.transaction(fn ->
       encrypted_payload = Crypto.encrypt(text, Crypto.app_key())
 
       {:ok, message} =
         %Message{}
-        |> Message.changeset(%{recipient_number: recipient, payload: encrypted_payload, status: "pending"})
+        |> Message.changeset(%{
+          recipient_number: recipient,
+          payload: encrypted_payload,
+          status: "pending",
+          user_id: user_id
+        })
         |> Repo.insert()
 
-      %{message_id: message.id, plaintext: text}
+      %{message_id: message.id, plaintext: text, user_id: user_id}
       |> MessageWorker.new()
       |> Oban.insert!()
 
