@@ -37,8 +37,9 @@ defmodule WaGate.Accounts do
 
   def create_session_with_instance(attrs, user_id) do
     phone = Map.get(attrs, "phone_number") || Map.get(attrs, :phone_number)
+    adapter = Application.get_env(:wa_gate, :whatsapp_engine)
 
-    case WaGate.WhatsApp.Adapters.Evolution.create_instance(phone) do
+    case adapter.create_instance(phone) do
       {:ok, _} -> create_session(Map.put(attrs, "user_id", user_id))
       {:error, reason} -> {:error, reason}
     end

@@ -38,8 +38,11 @@ defmodule WaGateWeb.SessionLive.Index do
         form = changeset |> to_form(as: "session")
         {:noreply, assign(socket, form: form)}
 
+      {:error, %Req.TransportError{reason: :econnrefused}} ->
+        {:noreply, put_flash(socket, :error, "Gagal membuat session Waha: tidak dapat terhubung ke server Waha")}
+
       {:error, reason} ->
-        {:noreply, put_flash(socket, :error, "Gagal membuat instance Evolution: #{reason}")}
+        {:noreply, put_flash(socket, :error, "Gagal membuat session Waha: #{inspect(reason)}")}
     end
   end
 

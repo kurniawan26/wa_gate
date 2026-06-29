@@ -29,18 +29,19 @@ defmodule WaGateWeb.SessionLive.Show do
 
   def handle_event("sync_status", _params, socket) do
     session = socket.assigns.session
+    adapter = Application.get_env(:wa_gate, :whatsapp_engine)
 
-    case WaGate.WhatsApp.Adapters.Evolution.get_status(session) do
+    case adapter.get_status(session) do
       {:ok, "open"} ->
         {:ok, updated} = Accounts.update_session(session, %{status: "connected"})
         Phoenix.PubSub.broadcast(WaGate.PubSub, "session:#{updated.id}", :connected)
         {:noreply, assign(socket, session: updated, qr_code: nil)}
 
       {:ok, state} ->
-        {:noreply, put_flash(socket, :info, "Status Evolution: #{state}. Belum terhubung.")}
+        {:noreply, put_flash(socket, :info, "Status WhatsApp: #{state}. Belum terhubung.")}
 
       {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Gagal mengambil status dari Evolution.")}
+        {:noreply, put_flash(socket, :error, "Gagal mengambil status dari WhatsApp engine.")}
     end
   end
 
@@ -63,7 +64,9 @@ defmodule WaGateWeb.SessionLive.Show do
   end
 
   defp fetch_qr_code(session) do
-    case WaGate.WhatsApp.Adapters.Evolution.fetch_qr(session) do
+    adapter = Application.get_env(:wa_gate, :whatsapp_engine)
+
+    case adapter.fetch_qr(session) do
       {:ok, base64} -> base64
       {:error, _} -> nil
     end

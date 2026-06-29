@@ -43,11 +43,12 @@ config :wa_gate, WaGateWeb.Endpoint,
 # For production it's recommended to configure a different adapter
 # at the `config/runtime.exs`.
 config :wa_gate, WaGate.Mailer, adapter: Swoosh.Adapters.Local
-config :wa_gate, :whatsapp_engine, WaGate.WhatsApp.Adapters.Evolution
+config :wa_gate, :whatsapp_engine, WaGate.WhatsApp.Adapters.Waha
 config :wa_gate, :encryption_key, System.get_env("ENCRYPTION_KEY")
 
-config :wa_gate, :whatsapp_engine_url, "http://localhost:8080"
-config :wa_gate, :whatsapp_engine_api_key, "lt67scX4Hbodj0kpaQYW8MPPIEoh94qpcvkU5COaiec="
+config :wa_gate, :whatsapp_engine_url, System.get_env("WAHA_API_URL", "http://localhost:3000")
+config :wa_gate, :whatsapp_engine_api_key, System.get_env("WAHA_API_KEY", "changeme")
+config :wa_gate, :webhook_url, System.get_env("WEBHOOK_URL", "http://localhost:4000/api/webhooks/whatsapp")
 
 # Configure esbuild (the version is required)
 config :esbuild,

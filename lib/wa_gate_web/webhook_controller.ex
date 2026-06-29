@@ -6,26 +6,24 @@ defmodule WaGateWeb.WebhookController do
 
   def receive(conn, params) do
     case params do
-      %{"event" => "connection.update", "instance" => phone, "data" => %{"state" => "open"}} ->
+      %{"event" => "session.status", "session" => phone, "payload" => %{"status" => "WORKING"}} ->
         case Accounts.get_session_by_phone(phone) do
-          nil ->
-            :ok
-
+          nil -> :ok
           session ->
             {:ok, updated} = Accounts.update_session(session, %{status: "connected"})
             Phoenix.PubSub.broadcast(WaGate.PubSub, "session:#{updated.id}", :connected)
         end
 
-      %{"event" => "connection.update", "instance" => phone, "data" => %{"state" => state}}
-      when state in ["close", "connecting"] ->
+      %{"event" => "session.status", "session" => phone, "payload" => %{"status" => status}}
+      when status in ["STOPPED", "FAILED"] ->
         case Accounts.get_session_by_phone(phone) do
           nil -> :ok
           session -> Accounts.update_session(session, %{status: "disconnected"})
         end
 
-      %{"event" => "messages.upsert", "instance" => phone, "data" => data}
-      when not is_nil(data) ->
-        handle_inbound_message(phone, data)
+      %{"event" => "message", "session" => phone, "payload" => payload}
+      when not is_nil(payload) ->
+        handle_inbound_message(phone, payload)
 
       _ ->
         :ok
@@ -34,22 +32,20 @@ defmodule WaGateWeb.WebhookController do
     send_resp(conn, 200, "")
   end
 
-  defp handle_inbound_message(phone, data) do
-    with %{"key" => %{"remoteJid" => jid, "fromMe" => false, "id" => ext_id}} <- data,
+  defp handle_inbound_message(phone, payload) do
+    with %{"id" => ext_id, "from" => from, "fromMe" => false} <- payload,
          session when not is_nil(session) <- Accounts.get_session_by_phone(phone) do
-      sender_number = extract_sender_number(jid)
-      body = get_in(data, ["message", "conversation"]) ||
-             get_in(data, ["message", "extendedTextMessage", "text"])
-
+      sender_number = extract_sender_number(from)
+      body = payload["body"]
       encrypted_body = if body, do: Crypto.encrypt(body, Crypto.app_key()), else: nil
 
       Messaging.save_inbound_message(%{
         external_id: ext_id,
         sender_number: sender_number,
-        sender_name: data["pushName"],
+        sender_name: get_in(payload, ["_data", "notifyName"]),
         body: encrypted_body,
-        message_type: data["messageType"] || "unknown",
-        raw_payload: data,
+        message_type: if(body, do: "text", else: "unknown"),
+        raw_payload: payload,
         whatsapp_session_id: session.id
       })
     else
@@ -57,12 +53,11 @@ defmodule WaGateWeb.WebhookController do
     end
   end
 
-  # Nomor biasa: "6285887453948@s.whatsapp.net" → "6285887453948"
-  # LID format:  "207653246636271@lid"          → "207653246636271@lid" (simpan utuh)
-  defp extract_sender_number(jid) do
-    case String.split(jid, "@") do
-      [number, "s.whatsapp.net"] -> number
-      _ -> jid
+  # "6285887453948@c.us" → "6285887453948"
+  defp extract_sender_number(from) do
+    case String.split(from, "@") do
+      [number, _] -> number
+      _ -> from
     end
   end
 end

@@ -70,10 +70,9 @@ config :wa_gate, WaGateWeb.Endpoint,
 # config/dev.exs
 config :wa_gate, :api_key, "dev-secret-key"
 
-config :wa_gate, :evolution_api,
-  base_url: "http://localhost:8080",
-  # Harus SAMA dengan di Docker
-  api_key: "lt67scX4Hbodj0kpaQYW8MPPIEoh94qpcvkU5COaiec="
+config :wa_gate, :whatsapp_engine_url, System.get_env("WAHA_API_URL", "http://localhost:3000")
+config :wa_gate, :whatsapp_engine_api_key, System.get_env("WAHA_API_KEY", "changeme")
+config :wa_gate, :webhook_url, System.get_env("WEBHOOK_URL", "http://localhost:4000/api/webhooks/whatsapp")
 
 # Enable dev routes for dashboard and mailbox
 config :wa_gate, dev_routes: true

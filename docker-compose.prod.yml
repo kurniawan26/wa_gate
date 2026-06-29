@@ -10,34 +10,24 @@ services:
       - DATABASE_URL=${DATABASE_URL}
       - SECRET_KEY_BASE=${SECRET_KEY_BASE}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
-      - EVOLUTION_API_URL=http://wa_engine:8080
-      - EVOLUTION_API_KEY=${EVOLUTION_API_KEY}
+      - WAHA_API_URL=http://wa_engine:3000
+      - WAHA_API_KEY=${WAHA_API_KEY}
+      - WEBHOOK_URL=${WEBHOOK_URL}
       - APP_API_KEY=${APP_API_KEY}
       - POOL_SIZE=${POOL_SIZE:-10}
     ports:
       - "4000:4000"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
 
   wa_engine:
-    image: evoapicloud/evolution-api:latest
+    image: devlikeapro/waha
     container_name: wa_gate_engine
     restart: always
     environment:
-      - AUTHENTICATION_API_KEY=${EVOLUTION_API_KEY}
-      - AUTHENTICATION_EXPOSE_IN_FETCH_INSTANCES=true
-      - CACHE_REDIS_ENABLED=false
-      - WEBHOOK_GLOBAL_ENABLED=true
-      - WEBHOOK_GLOBAL_URL=https://wa-gate.kurniawan.xyz/api/webhooks/whatsapp
-      - DATABASE_PROVIDER=postgresql
-      - DATABASE_CONNECTION_URI=${EVOLUTION_DATABASE_URL}
-      - DATABASE_CONNECTION_CLIENT_NAME=evolution
+      - WHATSAPP_API_KEY=${WAHA_API_KEY}
     ports:
-      - "8081:8080"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - "3000:3000"
     volumes:
-      - evolution_instances:/evolution/instances
+      - waha_sessions:/app/.sessions
 
 volumes:
-  evolution_instances:
+  waha_sessions:

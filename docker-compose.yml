@@ -13,12 +13,16 @@ services:
       - DATABASE_URL=ecto://myuser:mypassword@postgres/mydb
       - SECRET_KEY_BASE=${SECRET_KEY_BASE}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
-      - EVOLUTION_API_URL=http://wa_engine:8080
-      - EVOLUTION_API_KEY=${EVOLUTION_API_KEY:-lt67scX4Hbodj0kpaQYW8MPPIEoh94qpcvkU5COaiec=}
+      - WAHA_API_URL=http://wa_engine:3000
+      - WAHA_API_KEY=${WAHA_API_KEY:-changeme}
+      - WEBHOOK_URL=http://172.30.0.2:4000/api/webhooks/whatsapp
       - APP_API_KEY=${APP_API_KEY:-dev-secret-key}
-      - POOL_SIZE=10
+      - POOL_SIZE=${POOL_SIZE:-10}
     ports:
       - "4000:4000"
+    networks:
+      wa_net:
+        ipv4_address: 172.30.0.2
 
   postgres:
     image: postgres:16-alpine
@@ -32,27 +36,37 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U myuser"]
+      test: ["CMD-SHELL", "pg_isready -U myuser -d mydb"]
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      wa_net:
+        ipv4_address: 172.30.0.3
 
   wa_engine:
-    image: evoapicloud/evolution-api:latest
+    image: devlikeapro/waha
     container_name: wa_gate_engine
     restart: always
     environment:
-      - AUTHENTICATION_API_KEY=${EVOLUTION_API_KEY:-lt67scX4Hbodj0kpaQYW8MPPIEoh94qpcvkU5COaiec=}
-      - AUTHENTICATION_EXPOSE_IN_FETCH_INSTANCES=true
-      - CACHE_REDIS_ENABLED=false
-      - WEBHOOK_GLOBAL_ENABLED=true
-      - WEBHOOK_GLOBAL_URL=http://wa_gate:4000/api/webhooks/whatsapp
+      - WHATSAPP_API_KEY=${WAHA_API_KEY:-changeme}
     ports:
-      - "8081:8080"
+      - "3000:3000"
     volumes:
-      - evolution_instances:/evolution/instances
+      - waha_sessions:/app/.sessions
+    networks:
+      wa_net:
+        ipv4_address: 172.30.0.4
+
+networks:
+  wa_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
 
 volumes:
   postgres_data:
-  evolution_instances:
+  waha_sessions:
