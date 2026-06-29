@@ -11,6 +11,7 @@ defmodule WaGate.WhatsApp.Adapters.Waha do
          ) do
       {:ok, %{status: status}} when status in [200, 201] -> {:ok, %{}}
       {:ok, %{status: 401}} -> {:error, :unauthorized}
+      {:ok, %{status: 422}} -> {:error, :session_failed}
       {:ok, %{status: code}} -> {:error, "Waha returned status #{code}"}
       {:error, reason} -> {:error, reason}
     end

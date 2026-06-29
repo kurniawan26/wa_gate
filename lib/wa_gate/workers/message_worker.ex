@@ -56,7 +56,11 @@ defmodule WaGate.Workers.MessageWorker do
 
       {:error, :unauthorized} ->
         mark_session_disconnected(session)
-        {:error, "Session disconnected during sending"}
+        {:cancel, "Session disconnected (unauthorized)"}
+
+      {:error, :session_failed} ->
+        mark_session_disconnected(session)
+        {:cancel, "Session crashed or logged out on Waha engine"}
 
       {:error, reason} ->
         {:error, reason}
