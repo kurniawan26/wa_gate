@@ -5,7 +5,7 @@ services:
     restart: always
     environment:
       - PHX_HOST=${PHX_HOST}
-      - PHX_SCHEME=${PHX_SCHEME:-http}
+      - PHX_SCHEME=${PHX_SCHEME:-https}
       - PORT=4000
       - DATABASE_URL=${DATABASE_URL}
       - SECRET_KEY_BASE=${SECRET_KEY_BASE}
@@ -28,9 +28,14 @@ services:
       - AUTHENTICATION_EXPOSE_IN_FETCH_INSTANCES=true
       - CACHE_REDIS_ENABLED=false
       - WEBHOOK_GLOBAL_ENABLED=true
-      - WEBHOOK_GLOBAL_URL=http://wa_gate:4000/api/webhooks/whatsapp
+      - WEBHOOK_GLOBAL_URL=https://wa-gate.kurniawan.xyz/api/webhooks/whatsapp
+      - DATABASE_PROVIDER=postgresql
+      - DATABASE_CONNECTION_URI=${EVOLUTION_DATABASE_URL}
+      - DATABASE_CONNECTION_CLIENT_NAME=evolution
     ports:
       - "8081:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - evolution_instances:/evolution/instances
 
