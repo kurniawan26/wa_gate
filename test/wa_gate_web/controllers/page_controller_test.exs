@@ -1,8 +1,8 @@
 defmodule WaGateWeb.PageControllerTest do
   use WaGateWeb.ConnCase
 
-  test "GET /", %{conn: conn} do
+  test "GET / tanpa login diarahkan ke halaman login", %{conn: conn} do
     conn = get(conn, ~p"/")
-    assert html_response(conn, 200) =~ "Peace of mind from prototype to production"
+    assert redirected_to(conn) == ~p"/login"
   end
 end
