@@ -23,7 +23,24 @@ end
 config :wa_gate, WaGateWeb.Endpoint,
   http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
+# Kunci HMAC untuk memverifikasi webhook dari WAHA (header X-Webhook-Hmac).
+# Wajib di prod; di dev/test boleh kosong (verifikasi dilewati).
+config :wa_gate, :webhook_secret, System.get_env("WEBHOOK_SECRET")
+
+# Set REGISTRATION_ENABLED=false untuk menutup pendaftaran akun baru.
+config :wa_gate,
+       :registration_enabled,
+       System.get_env("REGISTRATION_ENABLED", "true") in ~w(true 1)
+
 if config_env() == :prod do
+  System.get_env("WEBHOOK_SECRET") ||
+    raise """
+    environment variable WEBHOOK_SECRET is missing.
+    Generate one with: openssl rand -hex 32
+    Setelah diset, sinkronkan ke sesi WAHA yang sudah ada:
+      bin/wa_gate eval "WaGate.Release.sync_webhooks()"
+    """
+
   encryption_key =
     System.get_env("ENCRYPTION_KEY") ||
       raise """

@@ -17,6 +17,11 @@ defmodule WaGateWeb.Router do
     plug :accepts, ["json"]
   end
 
+  pipeline :webhook do
+    plug :accepts, ["json"]
+    plug WaGateWeb.Plugs.VerifyWebhookSignature
+  end
+
   pipeline :api_authenticated do
     plug :accepts, ["json"]
     plug WaGateWeb.Plugs.ApiAuth
@@ -27,7 +32,7 @@ defmodule WaGateWeb.Router do
   end
 
   scope "/api", WaGateWeb do
-    pipe_through :api
+    pipe_through :webhook
 
     post "/webhooks/whatsapp", WebhookController, :receive
   end
@@ -61,6 +66,7 @@ defmodule WaGateWeb.Router do
       live "/sessions/:id", SessionLive.Show, :show
       live "/messages", MessageLive.Index, :index
       live "/messages/:number", MessageLive.Thread, :show
+      live "/settings", SettingsLive, :index
     end
   end
 

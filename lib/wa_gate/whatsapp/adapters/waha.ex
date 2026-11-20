@@ -80,19 +80,8 @@ defmodule WaGate.WhatsApp.Adapters.Waha do
   def create_instance(phone_number) do
     url = "#{get_base_url()}/api/sessions"
 
-    webhook_url =
-      Application.get_env(:wa_gate, :webhook_url, "http://localhost:4000/api/webhooks/whatsapp")
-
     case Req.post(url,
-           json: %{
-             "name" => phone_number,
-             "start" => true,
-             "config" => %{
-               "webhooks" => [
-                 %{"url" => webhook_url, "events" => ["message", "session.status"]}
-               ]
-             }
-           },
+           json: %{"name" => phone_number, "start" => true, "config" => session_config()},
            headers: headers()
          ) do
       {:ok, %{status: status}} when status in [200, 201] -> {:ok, :created}
@@ -101,6 +90,43 @@ defmodule WaGate.WhatsApp.Adapters.Waha do
       {:error, reason} -> {:error, reason}
     end
   end
+
+  @doc """
+  Menimpa konfigurasi webhook sesi yang sudah ada di WAHA (URL, event, dan
+  kunci HMAC terbaru). WAHA akan me-restart sesi yang sedang berjalan;
+  login WhatsApp tetap tersimpan.
+  """
+  def sync_webhook_config(phone_number) do
+    url = "#{get_base_url()}/api/sessions/#{phone_number}"
+
+    case Req.put(url,
+           json: %{"name" => phone_number, "config" => session_config()},
+           headers: headers()
+         ) do
+      {:ok, %{status: status}} when status in 200..299 -> :ok
+      {:ok, %{status: code}} -> {:error, "Waha returned #{code}"}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  defp session_config do
+    webhook =
+      %{
+        "url" =>
+          Application.get_env(
+            :wa_gate,
+            :webhook_url,
+            "http://localhost:4000/api/webhooks/whatsapp"
+          ),
+        "events" => ["message", "session.status"]
+      }
+      |> maybe_put_hmac(Application.get_env(:wa_gate, :webhook_secret))
+
+    %{"webhooks" => [webhook]}
+  end
+
+  defp maybe_put_hmac(webhook, secret) when secret in [nil, ""], do: webhook
+  defp maybe_put_hmac(webhook, secret), do: Map.put(webhook, "hmac", %{"key" => secret})
 
   def fetch_qr(session) do
     url = "#{get_base_url()}/api/#{session.phone_number}/auth/qr"

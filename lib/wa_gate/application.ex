@@ -13,6 +13,7 @@ defmodule WaGate.Application do
       {DNSCluster, query: Application.get_env(:wa_gate, :dns_cluster_query) || :ignore},
       {Oban, Application.fetch_env!(:wa_gate, Oban)},
       {Phoenix.PubSub, name: WaGate.PubSub},
+      WaGate.RateLimiter,
       # Start a worker by calling: WaGate.Worker.start_link(arg)
       # {WaGate.Worker, arg},
       # Start to serve requests, typically the last entry

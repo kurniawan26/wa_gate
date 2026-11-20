@@ -4,11 +4,14 @@ defmodule WaGateWeb.UserAuth do
   use WaGateWeb, :verified_routes
 
   alias WaGate.Auth
-  alias WaGate.Crypto
 
   # --- Plug callbacks ---
 
   def fetch_current_user(conn, _opts) do
+    # Cookie lama masih bisa membawa `enc_key` (kunci turunan password) yang
+    # dulu disimpan di session; buang supaya tidak terus beredar.
+    conn = if get_session(conn, :enc_key), do: delete_session(conn, :enc_key), else: conn
+
     user_id = get_session(conn, :user_id)
     user = user_id && Auth.get_user(user_id)
     assign(conn, :current_user, user)
@@ -51,13 +54,10 @@ defmodule WaGateWeb.UserAuth do
 
   # --- Session management ---
 
-  def log_in_user(conn, user, password) do
-    enc_key = Crypto.derive_user_key(password, user.enc_salt)
-
+  def log_in_user(conn, user) do
     conn
     |> renew_session()
     |> put_session(:user_id, user.id)
-    |> put_session(:enc_key, Base.encode64(enc_key))
     |> put_session(:user_name, user.name)
   end
 

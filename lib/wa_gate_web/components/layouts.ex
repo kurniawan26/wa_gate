@@ -37,39 +37,44 @@ defmodule WaGateWeb.Layouts do
 
   def app(assigns) do
     ~H"""
-    <header class="navbar px-4 sm:px-6 lg:px-8">
-      <div class="flex-1">
-        <a href={~p"/sessions"} class="flex-1 flex w-fit items-center gap-2">
-          <span class="text-sm font-semibold">WaGate</span>
-        </a>
-      </div>
-      <div class="flex-none">
-        <ul class="flex flex-row px-1 space-x-4 items-center">
-          <li>
-            <a href={~p"/sessions"} class="btn btn-ghost btn-sm">Sessions</a>
-          </li>
-          <li>
-            <a href={~p"/messages"} class="btn btn-ghost btn-sm">Pesan</a>
-          </li>
-          <%= if @current_user do %>
-            <li class="text-sm text-gray-500">{@current_user.name}</li>
-            <li>
-              <.link method="delete" href={~p"/logout"} class="btn btn-ghost btn-sm">
-                Logout
-              </.link>
-            </li>
-          <% end %>
-        </ul>
-      </div>
+    <header class="sticky top-0 z-40 h-14 border-b border-gray-200 bg-white/90 backdrop-blur">
+      <nav class="mx-auto flex h-full max-w-5xl items-center gap-1 px-4 text-sm">
+        <.link navigate={~p"/sessions"} class="mr-4 font-semibold text-gray-900">WaGate</.link>
+        <.nav_link href={~p"/sessions"}>Sessions</.nav_link>
+        <.nav_link href={~p"/messages"}>Pesan</.nav_link>
+        <.nav_link href={~p"/settings"}>Pengaturan</.nav_link>
+        <%= if @current_user do %>
+          <span class="ml-auto hidden text-gray-500 sm:inline">{@current_user.name}</span>
+          <.link
+            method="delete"
+            href={~p"/logout"}
+            class="ml-3 rounded-lg px-3 py-1.5 text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
+          >
+            Logout
+          </.link>
+        <% end %>
+      </nav>
     </header>
 
-    <main class="px-4 py-20 sm:px-6 lg:px-8">
-      <div class="mx-auto max-w-2xl space-y-4">
-        {render_slot(@inner_block)}
-      </div>
+    <main>
+      {render_slot(@inner_block)}
     </main>
 
     <.flash_group flash={@flash} />
+    """
+  end
+
+  attr :href, :string, required: true
+  slot :inner_block, required: true
+
+  defp nav_link(assigns) do
+    ~H"""
+    <.link
+      navigate={@href}
+      class="rounded-lg px-3 py-1.5 text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
+    >
+      {render_slot(@inner_block)}
+    </.link>
     """
   end
 
