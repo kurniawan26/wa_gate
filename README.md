@@ -110,9 +110,11 @@ Setiap baris CSV akan menghasilkan satu pesan dengan variabel yang sudah diisi. 
 
 ```
 POST /api/messages
-Authorization: Bearer dev-secret-key
+Authorization: Bearer <API key>
 Content-Type: application/json
 ```
+
+API key dibuat per user di halaman **Pengaturan** (`/settings`). Key hanya ditampilkan sekali saat dibuat dan disimpan di database dalam bentuk hash. Membuat ulang key langsung membatalkan key lama.
 
 ```json
 {
@@ -130,13 +132,22 @@ Response:
 }
 ```
 
-### Webhook Inbound (dari Evolution API)
+### Webhook Inbound (dari WAHA)
 
 ```
 POST /api/webhooks/whatsapp
 ```
 
-Daftarkan URL ini di Evolution API sebagai webhook untuk event `messages.upsert` dan `connection.update`.
+Webhook didaftarkan otomatis ke WAHA saat session dibuat (event `message` dan `session.status`). Setiap request diverifikasi dengan HMAC-SHA512 (header `X-Webhook-Hmac`) memakai `WEBHOOK_SECRET`. Request tanpa signature yang valid ditolak dengan `401`.
+
+Setelah mengisi atau mengganti `WEBHOOK_SECRET` / `WEBHOOK_URL`, sinkronkan ke session yang sudah ada:
+
+```bash
+bin/wa_gate eval "WaGate.Release.sync_webhooks()"   # release / Docker
+mix run -e "WaGate.Release.sync_webhooks()"          # dev
+```
+
+> Sinkronisasi membuat WAHA me-restart session yang sedang berjalan; login WhatsApp tetap tersimpan.
 
 ---
 

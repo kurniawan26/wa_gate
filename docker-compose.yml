@@ -16,6 +16,7 @@ services:
       - WAHA_API_URL=http://wa_engine:3000
       - WAHA_API_KEY=${WAHA_API_KEY:-changeme}
       - WEBHOOK_URL=http://172.30.0.2:4000/api/webhooks/whatsapp
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET:-dev-webhook-secret}
       - APP_API_KEY=${APP_API_KEY:-dev-secret-key}
       - POOL_SIZE=${POOL_SIZE:-10}
     ports:
