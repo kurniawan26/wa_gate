@@ -51,6 +51,12 @@ defmodule WaGateWeb.SessionLive.Show do
     {:noreply, assign(socket, session: session, qr_code: nil)}
   end
 
+  def handle_info(:disconnected, socket) do
+    session = Accounts.get_session!(socket.assigns.session.id)
+    schedule_qr_refresh(session)
+    {:noreply, assign(socket, session: session, qr_code: fetch_qr_code(session))}
+  end
+
   def handle_info(:refresh_qr, socket) do
     session = socket.assigns.session
 

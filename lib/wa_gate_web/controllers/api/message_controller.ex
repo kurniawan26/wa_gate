@@ -22,10 +22,10 @@ defmodule WaGateWeb.Api.MessageController do
             info: "Pesan telah masuk antrean pengiriman"
           })
 
-        {:error, _changeset} ->
+        {:error, reason} ->
           conn
           |> put_status(:unprocessable_entity)
-          |> json(%{error: "Gagal memproses pesan"})
+          |> json(%{error: "Gagal memproses pesan", details: Messaging.error_summary(reason)})
       end
     else
       {:error, :session_not_found} ->
@@ -40,6 +40,12 @@ defmodule WaGateWeb.Api.MessageController do
     end
   end
 
+  def create(conn, _params) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> json(%{error: "Parameter \"to\" dan \"text\" wajib diisi"})
+  end
+
   defp resolve_session_param(%{"session_id" => sid}, user) when is_binary(sid) and sid != "" do
     case Accounts.get_user_session(sid, user.id) do
       nil -> {:error, :session_not_found}
@@ -47,7 +53,8 @@ defmodule WaGateWeb.Api.MessageController do
     end
   end
 
-  defp resolve_session_param(%{"from_number" => phone}, user) when is_binary(phone) and phone != "" do
+  defp resolve_session_param(%{"from_number" => phone}, user)
+       when is_binary(phone) and phone != "" do
     case Accounts.get_user_session_by_phone(phone, user.id) do
       nil -> {:error, :phone_not_found}
       session -> {:ok, session.id}

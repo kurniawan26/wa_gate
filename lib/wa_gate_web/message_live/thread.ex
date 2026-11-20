@@ -30,15 +30,21 @@ defmodule WaGateWeb.MessageLive.Thread do
   end
 
   def handle_event("send_reply", %{"text" => text}, socket) do
-    trimmed = String.trim(text)
-
-    if trimmed != "" do
+    if String.trim(text) == "" do
+      {:noreply, socket}
+    else
       user_id = socket.assigns.current_user.id
       session_id = socket.assigns.preferred_session_id
-      Messaging.enqueue_message(socket.assigns.number, trimmed, user_id, session_id: session_id)
-    end
 
-    {:noreply, assign(socket, reply_text: "")}
+      case Messaging.enqueue_message(socket.assigns.number, text, user_id, session_id: session_id) do
+        {:ok, _} ->
+          {:noreply, assign(socket, reply_text: "")}
+
+        {:error, reason} ->
+          {:noreply,
+           put_flash(socket, :error, "Gagal mengirim: #{Messaging.error_summary(reason)}")}
+      end
+    end
   end
 
   @impl true
@@ -47,9 +53,12 @@ defmodule WaGateWeb.MessageLive.Thread do
     {:noreply, assign(socket, messages: Messaging.list_thread(socket.assigns.number, user_id))}
   end
 
-  def handle_info({:message_sent, _message}, socket) do
-    user_id = socket.assigns.current_user.id
-    {:noreply, assign(socket, messages: Messaging.list_thread(socket.assigns.number, user_id))}
+  def handle_info({:outbound_updated, %{user_id: user_id}}, socket) do
+    if user_id == socket.assigns.current_user.id do
+      {:noreply, assign(socket, messages: Messaging.list_thread(socket.assigns.number, user_id))}
+    else
+      {:noreply, socket}
+    end
   end
 
   defp find_preferred_session_id(messages) do
@@ -81,6 +90,11 @@ defmodule WaGateWeb.MessageLive.Thread do
 
   defp status_label(%{kind: :inbound}), do: ""
   defp status_label(%{kind: :outbound, status: "sent"}), do: "✓ terkirim"
+
+  defp status_label(%{kind: :outbound, status: "failed", error_reason: reason})
+       when is_binary(reason),
+       do: "✕ gagal: #{reason}"
+
   defp status_label(%{kind: :outbound, status: "failed"}), do: "✕ gagal"
   defp status_label(%{kind: :outbound, status: "pending"}), do: "· menunggu"
   defp status_label(_), do: ""

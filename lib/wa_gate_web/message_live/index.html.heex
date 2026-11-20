@@ -29,7 +29,10 @@
       <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-sm font-semibold text-gray-800">Kirim Pesan</h2>
-          <button phx-click="close_compose" class="text-gray-400 hover:text-gray-600 text-lg leading-none">
+          <button
+            phx-click="close_compose"
+            class="text-gray-400 hover:text-gray-600 text-lg leading-none"
+          >
             ✕
           </button>
         </div>
@@ -57,7 +60,10 @@
         </form>
 
         <div class="flex justify-end gap-2 pt-3">
-          <button phx-click="close_compose" class="text-sm text-gray-500 hover:text-gray-700 px-4 py-2">
+          <button
+            phx-click="close_compose"
+            class="text-sm text-gray-500 hover:text-gray-700 px-4 py-2"
+          >
             Batal
           </button>
           <button
@@ -82,10 +88,14 @@
             <h2 class="text-sm font-semibold text-gray-800">Kirim Massal (CSV)</h2>
             <p class="text-xs text-gray-400 mt-0.5">
               Kolom wajib: <code class="bg-gray-100 px-1 rounded">number</code>.
-              Gunakan <code class="bg-gray-100 px-1 rounded">{"{{nama_kolom}}"}</code> di template.
+              Gunakan <code class="bg-gray-100 px-1 rounded">{"{{nama_kolom}}"}</code>
+              di template.
             </p>
           </div>
-          <button phx-click="close_compose" class="text-gray-400 hover:text-gray-600 text-lg leading-none ml-4">
+          <button
+            phx-click="close_compose"
+            class="text-gray-400 hover:text-gray-600 text-lg leading-none ml-4"
+          >
             ✕
           </button>
         </div>
@@ -102,9 +112,13 @@
                   <% [entry] -> %>
                     <div class="flex items-center gap-2 pointer-events-none">
                       <%= if entry.done? do %>
-                        <span class="text-xs text-emerald-600 font-medium">✓ {entry.client_name}</span>
+                        <span class="text-xs text-emerald-600 font-medium">
+                          ✓ {entry.client_name}
+                        </span>
                       <% else %>
-                        <span class="text-xs text-gray-500">{entry.client_name} — {entry.progress}%</span>
+                        <span class="text-xs text-gray-500">
+                          {entry.client_name} — {entry.progress}%
+                        </span>
                       <% end %>
                     </div>
                   <% [] -> %>
@@ -120,12 +134,14 @@
             <div>
               <label class="text-xs text-gray-500 mb-1 block">
                 Template Pesan
-                <span class="text-gray-400 font-normal">— gunakan {"{{name}}"}, {"{{number}}"}, dll.</span>
+                <span class="text-gray-400 font-normal">
+                  — gunakan {"{{name}}"}, {"{{number}}"}, dll.
+                </span>
               </label>
               <textarea
                 name="template"
                 rows="8"
-                placeholder={"Dear {{name}},\n\nTerima kasih sudah memilih Dicoding..."}
+                placeholder="Dear {{name}},\n\nTerima kasih sudah memilih Dicoding..."
                 class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 bg-gray-50 focus:outline-none focus:border-gray-400 focus:bg-white transition placeholder:text-gray-400 resize-none"
               >{@bulk_template}</textarea>
             </div>
@@ -146,7 +162,9 @@
                       <span class="text-xs text-gray-400 font-mono w-4 text-right shrink-0">
                         {idx + 1}
                       </span>
-                      <span class="text-xs font-medium text-gray-700">{item.name || item.number}</span>
+                      <span class="text-xs font-medium text-gray-700">
+                        {item.name || item.number}
+                      </span>
                       <%= if item.name != "" do %>
                         <span class="text-xs text-gray-400 font-mono">{item.number}</span>
                       <% end %>
@@ -174,7 +192,10 @@
             <% end %>
           </p>
           <div class="flex gap-2">
-            <button phx-click="close_compose" class="text-sm text-gray-500 hover:text-gray-700 px-4 py-2">
+            <button
+              phx-click="close_compose"
+              class="text-sm text-gray-500 hover:text-gray-700 px-4 py-2"
+            >
               Batal
             </button>
             <button

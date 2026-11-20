@@ -17,6 +17,7 @@ defmodule WaGate.Crypto do
   def decrypt(encoded, key) when is_binary(encoded) and is_binary(key) do
     raw = Base.decode64!(encoded)
     <<iv::binary-12, tag::binary-16, ciphertext::binary>> = raw
+
     case :crypto.crypto_one_time_aead(:aes_256_gcm, key, iv, ciphertext, @aad, tag, false) do
       result when is_binary(result) -> result
       :error -> nil

@@ -20,7 +20,15 @@ defmodule WaGate.Messaging.InboundMessage do
 
   def changeset(message, attrs) do
     message
-    |> cast(attrs, [:external_id, :sender_number, :sender_name, :body, :message_type, :raw_payload, :whatsapp_session_id])
+    |> cast(attrs, [
+      :external_id,
+      :sender_number,
+      :sender_name,
+      :body,
+      :message_type,
+      :raw_payload,
+      :whatsapp_session_id
+    ])
     |> validate_required([:external_id, :sender_number, :message_type, :raw_payload])
     |> unique_constraint(:external_id)
   end

@@ -57,7 +57,7 @@ defmodule WaGateWeb.MessageLive.Index do
     {:noreply,
      assign(socket,
        show_compose: true,
-       compose_mode: String.to_existing_atom(mode),
+       compose_mode: if(mode == "bulk", do: :bulk, else: :single),
        compose_to: "",
        compose_text: "",
        bulk_csv: "",
@@ -88,19 +88,51 @@ defmodule WaGateWeb.MessageLive.Index do
   def handle_event("send_compose", _params, socket) do
     user_id = socket.assigns.current_user.id
 
-    case socket.assigns.compose_mode do
-      :single ->
-        text = String.trim(socket.assigns.compose_text)
-        to = String.trim(socket.assigns.compose_to)
-        if text != "" and to != "", do: Messaging.enqueue_message(to, text, user_id)
+    socket =
+      case socket.assigns.compose_mode do
+        :single ->
+          case Messaging.enqueue_message(
+                 socket.assigns.compose_to,
+                 socket.assigns.compose_text,
+                 user_id
+               ) do
+            {:ok, _} ->
+              socket
+              |> assign(show_compose: false)
+              |> put_flash(:info, "Pesan masuk antrean pengiriman.")
 
-      :bulk ->
-        Enum.each(socket.assigns.bulk_preview, fn %{number: number, message: message} ->
-          Messaging.enqueue_message(number, message, user_id)
-        end)
-    end
+            {:error, reason} ->
+              put_flash(socket, :error, "Gagal mengirim: #{Messaging.error_summary(reason)}")
+          end
 
-    {:noreply, assign(socket, show_compose: false)}
+        :bulk ->
+          results =
+            Enum.map(socket.assigns.bulk_preview, fn %{number: number, message: message} ->
+              {number, Messaging.enqueue_message(number, message, user_id)}
+            end)
+
+          failed =
+            for {number, {:error, reason}} <- results,
+                do: "#{number} (#{Messaging.error_summary(reason)})"
+
+          queued = length(results) - length(failed)
+
+          socket = assign(socket, show_compose: false)
+
+          case failed do
+            [] ->
+              put_flash(socket, :info, "#{queued} pesan masuk antrean pengiriman.")
+
+            _ ->
+              put_flash(
+                socket,
+                :error,
+                "#{queued} pesan masuk antrean, #{length(failed)} gagal: #{Enum.join(failed, "; ")}"
+              )
+          end
+      end
+
+    {:noreply, socket}
   end
 
   def handle_event("filter_session", %{"session_id" => sid}, socket) do
@@ -118,10 +150,13 @@ defmodule WaGateWeb.MessageLive.Index do
     {:noreply, assign(socket, contacts: Messaging.list_contacts(user_id, session_id))}
   end
 
-  def handle_info({:message_sent, _message}, socket) do
-    user_id = socket.assigns.current_user.id
-    session_id = socket.assigns.selected_session_id
-    {:noreply, assign(socket, contacts: Messaging.list_contacts(user_id, session_id))}
+  def handle_info({:outbound_updated, %{user_id: user_id}}, socket) do
+    if user_id == socket.assigns.current_user.id do
+      session_id = socket.assigns.selected_session_id
+      {:noreply, assign(socket, contacts: Messaging.list_contacts(user_id, session_id))}
+    else
+      {:noreply, socket}
+    end
   end
 
   defp maybe_consume_csv(socket) do
@@ -166,8 +201,12 @@ defmodule WaGateWeb.MessageLive.Index do
       |> Enum.reject(&(&1 == ""))
 
     case lines do
-      [] -> []
-      [_header_only] -> []
+      [] ->
+        []
+
+      [_header_only] ->
+        []
+
       [header_line | data_lines] ->
         headers = header_line |> String.split(",") |> Enum.map(&String.trim/1)
 

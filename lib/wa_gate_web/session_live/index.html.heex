@@ -26,7 +26,11 @@
           <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
             Simpan & Scan QR
           </button>
-          <button type="button" phx-click="cancel" class="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300">
+          <button
+            type="button"
+            phx-click="cancel"
+            class="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300"
+          >
             Batal
           </button>
         </div>
@@ -48,7 +52,10 @@
           Pesan Hari Ini: {session.messages_sent_today} / {session.max_daily_messages}
         </div>
         <div class="mt-4 flex items-center gap-3">
-          <.link navigate={~p"/sessions/#{session.id}"} class="text-blue-500 hover:underline text-sm">
+          <.link
+            navigate={~p"/sessions/#{session.id}"}
+            class="text-blue-500 hover:underline text-sm"
+          >
             Manage & Scan QR →
           </.link>
           <%= if session.status == "connected" do %>

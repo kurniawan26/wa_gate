@@ -8,7 +8,9 @@ defmodule WaGateWeb.WebhookController do
     case params do
       %{"event" => "session.status", "session" => phone, "payload" => %{"status" => "WORKING"}} ->
         case Accounts.get_session_by_phone(phone) do
-          nil -> :ok
+          nil ->
+            :ok
+
           session ->
             {:ok, updated} = Accounts.update_session(session, %{status: "connected"})
             Phoenix.PubSub.broadcast(WaGate.PubSub, "session:#{updated.id}", :connected)

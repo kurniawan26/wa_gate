@@ -34,7 +34,9 @@
             <span class="text-xs text-gray-400">{format_time(msg.inserted_at)}</span>
             <span class={"text-xs #{status_text_class(msg)}"}>{status_label(msg)}</span>
             <%= if msg.whatsapp_session do %>
-              <span class="text-xs text-gray-300">via {msg.whatsapp_session.name || msg.whatsapp_session.phone_number}</span>
+              <span class="text-xs text-gray-300">
+                via {msg.whatsapp_session.name || msg.whatsapp_session.phone_number}
+              </span>
             <% end %>
           </div>
         </div>

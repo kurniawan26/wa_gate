@@ -34,7 +34,10 @@ defmodule WaGate.WhatsApp.Adapters.Evolution do
   def create_instance(phone_number) do
     url = "#{get_base_url()}/instance/create"
 
-    case Req.post(url, json: %{instanceName: phone_number, qrcode: true, integration: "WHATSAPP-BAILEYS"}, headers: headers()) do
+    case Req.post(url,
+           json: %{instanceName: phone_number, qrcode: true, integration: "WHATSAPP-BAILEYS"},
+           headers: headers()
+         ) do
       {:ok, %{status: status}} when status in [200, 201] -> {:ok, :created}
       {:ok, %{status: 403}} -> {:ok, :already_exists}
       {:ok, %{status: code}} -> {:error, "Evolution returned #{code}"}

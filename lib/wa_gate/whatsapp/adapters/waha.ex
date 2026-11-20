@@ -1,21 +1,54 @@
 defmodule WaGate.WhatsApp.Adapters.Waha do
   @behaviour WaGate.WhatsApp.EngineBehaviour
 
+  # Klasifikasi error:
+  #   * `:engine_unauthorized` — API key WAHA salah (masalah konfigurasi gateway,
+  #     bukan sesi WhatsApp).
+  #   * `:session_not_found`   — sesi tidak ada di WAHA.
+  #   * `:session_not_ready`   — sesi ada tapi belum/tidak WORKING.
+  #   * `{:not_delivered, _}`  — request tidak sampai ke WAHA, aman di-retry.
+  #   * `{:delivery_unknown, _}` — request mungkin sudah diproses WAHA
+  #     (timeout/koneksi putus), retry berisiko mengirim dobel.
+  #   * `{:http_status, code}` — error lain dari WAHA.
+  @not_delivered_reasons [:econnrefused, :nxdomain, :ehostunreach, :enetunreach, :eaddrnotavail]
+
   @impl true
   def send_message(session, to, text) do
     url = "#{get_base_url()}/api/sendText"
 
     case Req.post(url,
            json: %{"session" => session.phone_number, "chatId" => to_chat_id(to), "text" => text},
-           headers: headers()
+           headers: headers(),
+           retry: false
          ) do
-      {:ok, %{status: status}} when status in [200, 201] -> {:ok, %{}}
-      {:ok, %{status: 401}} -> {:error, :unauthorized}
-      {:ok, %{status: 422}} -> {:error, :session_failed}
-      {:ok, %{status: code}} -> {:error, "Waha returned status #{code}"}
-      {:error, reason} -> {:error, reason}
+      {:ok, %{status: status, body: body}} when status in 200..299 ->
+        {:ok, response_map(body)}
+
+      {:ok, %{status: status}} when status in [401, 403] ->
+        {:error, :engine_unauthorized}
+
+      {:ok, %{status: 404}} ->
+        {:error, :session_not_found}
+
+      {:ok, %{status: 422}} ->
+        {:error, :session_not_ready}
+
+      {:ok, %{status: code}} ->
+        {:error, {:http_status, code}}
+
+      {:error, %{reason: reason}} when reason in @not_delivered_reasons ->
+        {:error, {:not_delivered, reason}}
+
+      {:error, %{reason: reason}} ->
+        {:error, {:delivery_unknown, reason}}
+
+      {:error, reason} ->
+        {:error, {:delivery_unknown, reason}}
     end
   end
+
+  defp response_map(body) when is_map(body), do: body
+  defp response_map(_), do: %{}
 
   @impl true
   def update_presence(session, to, presence) do
@@ -24,7 +57,8 @@ defmodule WaGate.WhatsApp.Adapters.Waha do
 
     Req.post(url,
       json: %{"chatId" => to_chat_id(to), "presence" => value},
-      headers: headers()
+      headers: headers(),
+      retry: false
     )
 
     :ok
@@ -45,7 +79,9 @@ defmodule WaGate.WhatsApp.Adapters.Waha do
 
   def create_instance(phone_number) do
     url = "#{get_base_url()}/api/sessions"
-    webhook_url = Application.get_env(:wa_gate, :webhook_url, "http://localhost:4000/api/webhooks/whatsapp")
+
+    webhook_url =
+      Application.get_env(:wa_gate, :webhook_url, "http://localhost:4000/api/webhooks/whatsapp")
 
     case Req.post(url,
            json: %{

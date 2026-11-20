@@ -22,7 +22,10 @@ defmodule WaGate.Accounts do
   end
 
   def get_user_session(id, user_id) do
-    Repo.get_by(Session, id: id, user_id: user_id)
+    case Ecto.UUID.cast(id) do
+      {:ok, uuid} -> Repo.get_by(Session, id: uuid, user_id: user_id)
+      :error -> nil
+    end
   end
 
   def get_user_session_by_phone(phone_number, user_id) do

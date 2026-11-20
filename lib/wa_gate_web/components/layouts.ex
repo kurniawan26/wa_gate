@@ -115,5 +115,4 @@ defmodule WaGateWeb.Layouts do
     </div>
     """
   end
-
 end
