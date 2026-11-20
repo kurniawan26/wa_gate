@@ -25,6 +25,7 @@ defmodule WaGate.FakeWhatsAppEngine do
 
   def create_instance(_phone), do: {:ok, :created}
   def fetch_qr(_session), do: {:error, :qr_not_ready}
+  def sync_webhook_config(_phone), do: :ok
 
   defp notify(fun, args), do: send(self(), {:fake_engine, fun, args})
 end

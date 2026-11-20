@@ -35,4 +35,22 @@ defmodule WaGateWeb.ConnCase do
     WaGate.DataCase.setup_sandbox(tags)
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
+
+  @doc "Login sebagai `user` dengan menaruh user_id di session."
+  def log_in(conn, user) do
+    Phoenix.ConnTest.init_test_session(conn, %{user_id: user.id})
+  end
+
+  @doc "Set env aplikasi selama satu test lalu kembalikan nilai lamanya."
+  def put_app_env(key, value) do
+    previous = Application.fetch_env(:wa_gate, key)
+    Application.put_env(:wa_gate, key, value)
+
+    ExUnit.Callbacks.on_exit(fn ->
+      case previous do
+        {:ok, v} -> Application.put_env(:wa_gate, key, v)
+        :error -> Application.delete_env(:wa_gate, key)
+      end
+    end)
+  end
 end
