@@ -69,22 +69,23 @@ if config_env() == :prod do
 
   config :wa_gate, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
 
-  config :wa_gate, :whatsapp_engine_url,
-    System.get_env("WAHA_API_URL", "http://localhost:3000")
+  config :wa_gate, :whatsapp_engine_url, System.get_env("WAHA_API_URL", "http://localhost:3000")
 
-  config :wa_gate, :whatsapp_engine_api_key,
-    System.get_env("WAHA_API_KEY") ||
-      raise """
-      environment variable WAHA_API_KEY is missing.
-      """
+  config :wa_gate,
+         :whatsapp_engine_api_key,
+         System.get_env("WAHA_API_KEY") ||
+           raise("""
+           environment variable WAHA_API_KEY is missing.
+           """)
 
-  config :wa_gate, :webhook_url,
-    System.get_env("WEBHOOK_URL") ||
-      raise """
-      environment variable WEBHOOK_URL is missing.
-      Set to the public URL of this app + /api/webhooks/whatsapp
-      Example: https://yourdomain.com/api/webhooks/whatsapp
-      """
+  config :wa_gate,
+         :webhook_url,
+         System.get_env("WEBHOOK_URL") ||
+           raise("""
+           environment variable WEBHOOK_URL is missing.
+           Set to the public URL of this app + /api/webhooks/whatsapp
+           Example: https://yourdomain.com/api/webhooks/whatsapp
+           """)
 
   config :wa_gate, WaGateWeb.Endpoint,
     url: [host: host, port: url_port, scheme: scheme],

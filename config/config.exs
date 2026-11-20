@@ -48,7 +48,10 @@ config :wa_gate, :encryption_key, System.get_env("ENCRYPTION_KEY")
 
 config :wa_gate, :whatsapp_engine_url, System.get_env("WAHA_API_URL", "http://localhost:3000")
 config :wa_gate, :whatsapp_engine_api_key, System.get_env("WAHA_API_KEY", "changeme")
-config :wa_gate, :webhook_url, System.get_env("WEBHOOK_URL", "http://localhost:4000/api/webhooks/whatsapp")
+
+config :wa_gate,
+       :webhook_url,
+       System.get_env("WEBHOOK_URL", "http://localhost:4000/api/webhooks/whatsapp")
 
 # Configure esbuild (the version is required)
 config :esbuild,

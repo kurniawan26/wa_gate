@@ -40,3 +40,8 @@ config :phoenix_live_view,
 # Sort query params output of verified routes for robust url comparisons
 config :phoenix,
   sort_verified_routes_query_params: true
+
+# WhatsApp engine palsu untuk test (lihat test/support/fake_whatsapp_engine.ex)
+config :wa_gate, :whatsapp_engine, WaGate.FakeWhatsAppEngine
+config :wa_gate, :simulate_typing, false
+config :wa_gate, :encryption_key, "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY="
